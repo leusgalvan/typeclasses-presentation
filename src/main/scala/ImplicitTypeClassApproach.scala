@@ -1,4 +1,4 @@
-object ExplicitTypeClassApproach {
+object ImplicitTypeClassApproach {
 
   sealed trait JsValue
 
@@ -9,7 +9,7 @@ object ExplicitTypeClassApproach {
   case class JsObject(entries: Map[String, JsValue]) extends JsValue
 
   // Typeclass: trait with one type parameter, and some operations on that type.
-  trait JsConverter[A] {
+  trait Json[A] {
     def toJson(value: A): JsValue
   }
 
@@ -19,11 +19,11 @@ object ExplicitTypeClassApproach {
     case JsObject(entries) => s"""{${entries.map(p => p._1 + ": " + write(p._2)).mkString(", ")}}"""
   }
 
-  def write[A](value: A, jsConverter: JsConverter[A]): String =
+  def write[A](value: A)(implicit jsConverter: Json[A]): String =
     write(jsConverter.toJson(value))
 
   // Typeclass instance: Its the assertion that Operation belongs in the JsConverter class
-  val operationJsConverter = new JsConverter[Operation] {
+  implicit val operationJsConverter = new Json[Operation] {
     override def toJson(value: Operation): JsValue = value match {
       case Withdraw(accountNumber, amount) =>
         JsObject(Map(
